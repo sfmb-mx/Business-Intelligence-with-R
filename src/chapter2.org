@@ -1,0 +1,1002 @@
+#+TITLE:         Chapter 2 of Business Intelligence with R :: Getting data
+#+AUTHOR:        Sergio-Feliciano Mendoza-Barrera
+#+DRAWERS:       sfmb
+#+EMAIL:         smendoza.barrera@gmail.com
+#+DATE:          16/08/2016
+#+DESCRIPTION:   The analytics problem
+#+KEYWORDS:      R, data science, emacs, ESS, org-mode, analytics
+#+LANGUAGE:      en
+#+OPTIONS:       H:10 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:t f:t *:t <:t d:HIDDEN
+#+OPTIONS:       TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+OPTIONS:       LaTeX:dvipng
+#+INFOJS_OPT:    view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+XSLT:
+#+STYLE: <link rel="stylesheet" type="text/css" href="dft.css"/>
+
+#+LaTeX_CLASS: IEEEtran
+#+LATEX_CLASS_OPTIONS: [letterpaper, 9pt, onecolumn, twoside, technote, final]
+#+LATEX_HEADER: \usepackage{minted}
+#+LATEX_HEADER: \usepackage{makeidx}
+
+#+LATEX_HEADER: \usepackage[lining,tabular]{fbb} % so math uses tabular lining figures
+#+LATEX_HEADER: \usepackage[scaled=.95,type1]{cabin} % sans serif in style of Gill Sans
+#+LATEX_HEADER: \usepackage[varqu,varl]{zi4}% inconsolata typewriter
+#+LATEX_HEADER: \usepackage[T1]{fontenc} % LY1 also works
+#+LATEX_HEADER: \usepackage[libertine,bigdelims]{newtxmath}
+#+LATEX_HEADER: \usepackage[cal=boondoxo,bb=boondox,frak=boondox]{mathalfa}
+#+LATEX_HEADER: \useosf % change normal text to use proportional oldstyle figures
+
+#+LATEX_HEADER: \markboth{Chapter 1 of Business Intelligence with R}%
+#+LATEX_HEADER: {Sergio-Feliciano Mendoza-Barrera}
+
+#+LATEX_HEADER: \newcommand{\degC}{$^\circ$C{}}
+
+#+STYLE: <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"> </script>
+
+#+ATTR_HTML: width="500px"
+
+# -*- mode: org; -*-
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/htmlize.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/bigblow.css"/>
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/hideshow.css"/>
+
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.localscroll-min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.zclip.min.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/bigblow.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/hideshow.js"></script>
+#+HTML_HEAD: <script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+
+#+BEGIN_ABSTRACT
+Chapter 1. Getting Data.
+
+Instructions: M-x org-babel-execute-buffer or C-c C-v b to evaluate
+all buffer.
+#+END_ABSTRACT
+
+* Getting data
+
+- Working with Files
+- Working with Databases
+- Getting Data from the Web
+- Creating Fake Data to Test Code
+- Writing Files to Disk
+
+The tried-and-true method for bringing data into R is via the humble
+csv file, and in many cases it will be the default approach. But in
+most professional environments, you'll encounter a wide variety of
+file formats and production needs, so having a cheat sheet of data
+import methods is useful.
+
+There are a wide variety of packages and functions to import data from
+files, but a few provide nearly all the functionality you'll need:
+
+| File Type         | Function                                     | Package    |
+|-------------------+----------------------------------------------+------------|
+| csv file          | ~read.table("file", sep=",", ...)~           | base       |
+|                   | ~read.csv("file", ...)~                      |            |
+| Flat file         | ~read.table("file", sep=" ", ...)~           | base       |
+|                   | ~fread("file", sep=" ", ...)~                | data.table |
+| Excel             | ~read_excel("Excelfile", sheet, ...)~        | readxl     |
+|                   | ~read.xls("Excelfile",sheet, ...)~           | gdata      |
+|                   | ~readWorksheet("Excelfile", sheet, ...)~     | XLConnect  |
+| XML               | ~xmlToDataFrame("xmlfile", ...)~             | XML        |
+|                   | ~readHTMLTable("htmlfile", which= , ...)~    |            |
+| JSON              | ~fromJSON(   )~                              | jsonlite   |
+| SPSS              | ~spss.get("SPSSfile.sav")~                   | Hmisc      |
+| Stata             | ~read.dta("Statafile.dta")~                  | foreign    |
+| SAS               | ~read.sas7bdat("SASfile.sas7bdat")~          | sas7bdat   |
+| Database table(s) | ~sqlFetch(CONNECTION, "TABLE NAME", ...)~    | RODBC      |
+|                   | ~sqlQuery(CONNECTION, "SQL QUERY", ...)~     |            |
+|                   | ~sqldf("SQL QUERY", dbname="database", ...)~ | sqldf      |
+
+** Working with files
+
+*** Reading flat files from disk or the web
+
+To import flat files, it's probably best to get in the habit of using
+~read.table~ instead of ~read.csv~. While comma-delimited files are
+indeed the most common, tab- and pipe-delimited can also be quite
+prevalent depending on the context. And, since ~read.csv~ is just a
+wrapper for ~read.table~, you might save time in the long run by using
+~read.table~ for any flat file, and changing the ~sep~ value as
+needed, such as ~sep=","~ for comma, ~sep="\t"~ for tab, ~sep="|"~ for
+pipe, and so on. I also like to use the ~stringsAsFactors=FALSE~
+option as well, as I often pull in data that has character fields, and
+it's easier to designate the factor variables later. Finally,
+~read.table~ assumes that the data you're reading in doesn't have a
+header, so if there is one, you have to specify that with
+~header=TRUE~.
+
+We saw reading in a semi-colon delimited flat file in the first chapter:
+
+#+begin_src R :session :results output :exports all
+  power <- read.table("~/BIWR/Chapter1/Data/household_power_consumption.txt",
+             sep=";", header=T, na.strings=c("?",""), stringsAsFactors=FALSE)
+#+end_src
+
+While reading in a flat file is pretty standard fare for any R user,
+it can sometimes require a little extra work to make sure it comes in
+correctly. One important option to remember is ~na.strings~; while R
+will read missing data from blank cells as ~NA~ automatically, you
+find a wide variety of ways people code missing values, from ~-99~ to
+~?~ and sometimes even '0'. Occasionally you find more than one ~NA~
+designator in the same file, as you can see in the ~power~ dataset
+example, above.
+
+Sometimes file encoding matters as well. This example downloads an
+online .csv file from the Canadian 2011 Public Service Employee Survey
+(PSES), using UTF-8 encoding to ensure that special characters are
+read in correctly:
+
+#+begin_src R :session :results output :exports all
+  # Read in a csv from the internet with non-ASCII characters
+  pses2011 <- read.table("http://www.tbs-sct.gc.ca/pses-saff/2011/data/2011_results-resultats.csv", sep=",", encoding="UTF-8")
+#+end_src
+
+Note: this file has no header; in the next section, we'll download the
+Excel file with the documentation for this data and use that to create
+the header.
+
+*** Reading big files with data.table
+
+The ~data.table~ package is extremely useful—and much, *much* faster
+than ~read.table~ — for larger files. The ~data.table~ function we used
+at the start of Chapter 1 on household power consumption took about 24
+seconds on my laptop; the ~fread~ function below only took 2.3
+seconds.
+
+#+begin_src R :session :results output :exports all
+  require(data.table)
+  ## If you want to read in a csv directly, use fread, e.g., if you
+  ## had the raw pses2011 in a local csv, you'd read it in this way:
+  power <- fread("~/BIWR/Chapter1/Data/household_power_consumption.txt",
+                 sep=";", header=T, na.strings=c("?",""), stringsAsFactors=FALSE)
+#+end_src
+
+If you *already* have a data frame and want to speed up reading and
+accessing it, use the ~data.table~ function:
+
+#+begin_src R :session :results output :exports all
+  power = data.table("power")
+#+end_src
+
+*** Unzipping files within R
+
+Larger files are often zipped up to save space and bandwidth. Using
+the ~unz~ function inside the usual ~read.table~ takes care of
+bringing a single file into R. We'll download the zip file for the
+[[https://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset][Bike Sharing dataset]] from the UCI Machine Learning Archive and unzip
+the daily use file from it.
+
+#+begin_src R :session :results output :exports all
+  download.file("http://archive.ics.uci.edu/ml/machine-learning-databases/00275/Bike-Sharing-Dataset.zip", "Bike-Data.zip")
+  bike_share_daily <- read.table(unzip("Bike-Data.zip", "day.csv"),
+                                 header=T, quote="\"", sep=",")
+#+end_src
+
+If the zip file has more than one file in it, you can unzip them all
+from within R with ~unzip~.
+
+#+begin_src R :session :results output :exports all
+  unzip("Bike-Data.zip")
+#+end_src
+
+Note: although there is an ~untar~ function, it is no longer
+necessary—gzipped files can be read directly into R with the standard
+~read.table~ function.
+
+Once you have the data files (or other files) unzipped, you can bring
+them into R as data frames or other formats using the relevant
+"reading data" functions, e.g.:
+
+#+begin_src R :session :results output :exports all
+  bike_share_daily <- read.table("day.csv", header=T, sep=",")
+  bike_share_hourly <- read.table("hour.csv", header=T, sep=",")
+  bike_share_readme <- readLines("Readme.txt")
+#+end_src
+
+*** Reading Excel files
+
+To import Excel files, ~readxl~, ~gdata~, or ~XLConnect~ provide
+pretty much anything you'll need; ~gdata~ is faster and more powerful
+but requires Perl, so Windows users must ensure that's installed on
+their system before they can use it. ~XLConnect~ has a lot of options
+for those using Windows and/or are in Excel-heavy work environments,
+and while it can be slow with large files, it is based on Java so it
+could be easier to start with on Windows platforms (as long as the
+Java and R architectures match, i.e., if R is x64, Java should be as
+well). ~readxl~ is a new addition to the R ecosystem, and if all you
+need to do is pull in a worksheet as-is, it's by far the fastest and
+easiest method.
+
+We'll use an Excel file that comes with the ~readxl~ package to demonstrate ~readxl~ and ~XLConnect~.
+
+#+begin_src R :session :results output :exports all
+  # Load the package
+  require(readxl)
+
+  # Load the Excel workbook
+  datasets <- system.file("extdata/datasets.xlsx", package = "readxl")
+
+  # Read in the first worksheet
+  iris_xl <- read_excel(datasets, sheet = 1)
+#+end_src
+
+The ~XLConnect~ package makes it easy to read and write to and from
+Excel files. For sake of reproducibility and data permanency, you
+should always save data as plain text, e.g., as a csv, and not in
+proprietrary or non-text formats like Excel. So if you must write/save
+*into* Excel, ~XLConnect~ will do it... but you'll have to figure that
+out on your own.
+
+#+begin_src R :session :results output :exports all
+  # Load the package
+  require(XLConnect)
+
+  # Load the Excel workbook
+  wb <- loadWorkbook(system.file("extdata/datasets.xlsx", package = "readxl"))
+#+end_src
+
+If you want to read in a single tab/sheet:
+
+#+begin_src R :session :results output :exports all
+  # Read in the first tab
+  data_from_sheet <- readWorksheet(wb, sheet = 1)
+#+end_src
+
+The ~sheet=~ option can use the sheet's name or its position, e.g.,
+using ~sheet="NAME OF SHEET"~ in either ~readxl~ or ~XLConnect~
+retrieves the same data.
+
+If you want to read in *every* tab from a single Excel file:
+
+#+begin_src R :session :results output :exports all
+  # Get a list of worksheets in the workbook
+  sheets <- getSheets(wb)
+
+  # Invisibly return each sheet as its own data frame
+  invisible(
+          lapply(sheets,function(sheet)
+                  assign(sheet,readWorksheet (wb, sheet = sheet ), pos = 1))
+  )
+#+end_src
+
+~XLConnect~ doesn't support downloading an Excel file straight from
+the web. However, ~gdata~ can. You can use it to import the
+documentation file for the 2011 PSES dataset imported in the previous
+section, and since the sheet has non-data rows in it (at the bottom),
+we'll exclude those by using the ~nrows~ function. It also contains
+"multi-string" headers, so we'll use the ~header~, ~skip~, and
+~col.name~ options to ignore their header and create our own:
+
+#+begin_src R :session :results output :exports all
+  # Load package
+  require(gdata)
+
+  # Download Excel file form web and read in the first sheet to a data frame
+  pses2011_header <- read.xls("http://www.tbs-sct.gc.ca/pses-saff/2011/data/PSES2011_Documentation.xls", sheet="Layout-Format", nrows=22, header=FALSE, skip=1, col.names=c("Variables", "Size", "Type", "Description"), stringsAsFactors=FALSE)
+#+end_src
+
+Using the ~colnames~ function, the metadata we read in from this Excel
+file can be used to create the header names for the raw data we read
+in as a csv in the previous section:
+
+#+begin_src R :session :results output :exports all
+  # Assign the Variable column names from the Excel file to the raw data file
+  colnames(pses2011) <- pses2011_header$Variable
+#+end_src
+
+*** Creating a dataframe from the clipboard or direct entry
+
+A really useful short-cut to get spreadsheet or table data with a
+header row into R quickly is copying it into the clipboard from a
+spreadsheet and importing it via the ~"clipboard"~ option in the
+~read.table~ function:
+
+#+begin_src R :session :results output :exports all
+  # Generic code for reading data from the clipboard
+  my_data_frame <- read.table("clipboard", sep="\t", header=TRUE)
+#+end_src
+
+For a small amount of data, many R users would make vectors and create
+a data frame from them, e.g.,:
+
+#+begin_src R :session :results output :exports all
+  # Fake data in vectors
+  Survey_Response <- c("Strongly Agree", "Agree", "Neutral", "Disagree",
+    "Strongly Disagree")
+  Send_Email_Ad <- c("Yes", "Yes", "No", "No", "No")
+
+  # Combine vectors into a data frame
+  marketing <- data.frame(Survey_Response, Send_Email_Ad)
+#+end_src
+
+Longtime SAS users might remember the datalines (or cards, if you're
+really an old-timer) method to create tables on the fly. While the
+clipboard method shown above is probably better in most cases, if
+you're used to using this old SAS method and you only need a quick,
+small, use-once table, the ~textConnection~ function could be handy to
+have in the toolbox:
+
+#+begin_src R :session :results output :exports all
+  # An R take on SAS's datalines
+  marketing <- read.table(textConnection
+  ("Survey_Response, Send_Email_Ad
+  Strongly Agree, Yes
+  Agree, Yes
+  Neutral, No
+  Disagree, No
+  Strongly Disagree, No"),
+  header=TRUE, sep=",")
+#+end_src
+
+Of course, whichever works best for you is the method to use.
+
+*** Reading XML files
+
+We see a way to bring in specific tables from websites below, in the
+Web section, but this recipe provides an overview of bringing in a
+complete XML file. For a simple example, we'll use the 2010 Patient
+Satisfaction results from the Veterans Health Adminstration's [[http://www1.va.gov/health/HospitalReportCard.asp][Hospital
+Report Card]].
+
+#+begin_src R :session :results output :exports all
+  require(XML)
+  # Read in the webpage as-is
+  vha_pt_sat_raw <- readLines("http://www1.va.gov/VETDATA/docs/Datagov/Data_Gov_VHA_2010_Dataset11_Patient_Satisfaction.xml")
+
+  # Convert xml to a data frame
+  VHA_Patient_Satisfaction <- xmlToDataFrame(vha_pt_sat_raw)
+#+end_src
+
+When there are more complex structures in the file, you may have to
+use another approach. Here we'll use the Federal Housing Finance
+Agency's [House Price Index [[http://www.fhfa.gov/DataTools/Downloads/Pages/House-Price-Index.aspx][HPI]], which measures average price changes
+in repeat sales or refinancings on single-family homes. If you try the
+simple approach shown above, it will fail, with the warning ~'data'
+must be of a vector type, was 'NULL'~. Going through a list first and
+then into a data frame can often make these types of xml files import
+successfully:
+
+#+begin_src R :session :results output :exports all
+  # Read the file from the web
+  FHFA_HPI_raw <- readLines("http://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_master.xml")
+
+  # Convert the XML to an R list
+  FHFA_HPI_list <- xmlToList(xmlParse(FHFA_HPI_raw))
+
+  # Turn the list into a data frame
+  FHFA_HPI <- data.frame(do.call(rbind, FHFA_HPI_list), row.names = make.unique(names(FHFA_HPI_list)))
+#+end_src
+
+*** Reading JSON files
+
+JSON data can be really useful for nested data, so it is becoming more
+popular for data visualizations (e.g., in d3-based web apps) and other
+applications where the usual row *x* column format would make for a
+large and unweidly data structure. Still, sometimes we need to work
+with these data structures in R, so reading them into a data frame is
+required. The ~jsonlite~ package is probably the best way to do this.
+
+#+begin_src R :session :results output :exports all
+  # Load the jsonlite package
+  require(jsonlite)
+
+  # Get JSON data of UFO sightings
+  ufos <- fromJSON("http://metricsgraphicsjs.org/data/ufo-sightings.json")
+#+end_src
+
+Usually, the ~fromJSON~ function will return a list if you're pulling
+in anything more complex than raw JSON, so you'll need to either call
+the data frame from within the list, or convert that portion of the
+list into a data frame. We'll do the latter in this example:
+
+#+begin_src R :session :results output :exports all
+  # Acquire the JSON data from Yahoo finance
+  currency_list <- fromJSON("http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json")
+
+  # This takes the piece of the list we need and brings it out as a data frame
+  currency_data <- currency_list$list$resources$resource$fields
+
+  # Look at the data structure
+  str(currency_data)
+#+end_src
+
+You'll notice that every variable is in character format, so you'll
+need to do a little cleaning to get this data into a format we can
+analyze. We'll see more on changing formats in the next chapter.
+
+Sometimes you encounter streaming JSON (aka "pseudo-JSON"), which
+contains JSON formatted-data but throws an error when you try to use
+the ~fromJSON~ function. Instead, use the ~stream_in~ function as
+follows:
+
+#+begin_src R :session :results output :exports all
+  # Download Enron emails to the working directory from jsonstudio
+  download.file("http://jsonstudio.com/wp-content/uploads/2014/02/enron.zip",
+    "enron.zip")
+
+  # Unzip it
+  unzip("enron.zip")
+
+  # Bring in the streaming json as a data frame
+  enron <- stream_in(file("enron.json"))
+#+end_src
+
+As above, each variable in the data frame is in ~chr~ format, so
+you'll have to convert to other data types where relevant (e.g., the
+~date~ column).
+
+** Working with databases
+
+*** Connecting to a database
+
+While those who work with server-based databases will typically
+manipulate the data in those environments before importing into R,
+there are times when having a direct link to the database can be
+useful—for ongoing and/or automated reporting, for one. This recipe
+covers the basics of ~RODBC~, one of the packages that allows you to
+use ODBC to connect R to your database. I've found the ~sqldf~ package
+(see the next few recipes) easier to use for working with database
+tables once you've connected, but as usual there are a variety of
+options in R—choose the one that works best for your workflow.
+
+As there are dozens of database platforms, all with their own
+system-specific drivers, we won't cover Data Source Name (DSN) setup
+in this book. Enterprise systems often have those already set up, but
+if not, your database admin and/or a search on stackoverflow can
+provide advice on setting up the proper drivers for your particular
+context for adding user or system DSN connections. As an example, this
+is how you might set up a user DSN in a Windows Server environment to
+access a SQL Server database:
+
+1. Click the Start button. Type in data in the Search programs and
+   files box and select Data Sources (ODBC).
+2. Click Add.
+3. Select SQL Server Native Client xx.x, or choose the appropriate
+   driver if that's not the one you need. Click Finish.
+4. Put the name you want to use to access the database in the Name
+   box, e.g., ~SQL3~. Put the actual name of the server in the Server
+   box, e.g., perhaps this server is called ~EDWSQLDB3~. Click Next.
+5. Leave it as Integrated Windows Authentication unless for some
+   reason you like doing things manually. Click Next.
+6. Choose the database to match the specific one on the server you
+   wish to access. If you have read/write privs to the data, leave
+   that box as is. Otherwise, change ~READWRITE~ to ~READONLY~ in the
+   dropdown list. Click Next.
+7. Adjust settings as you prefer or just click Finish.
+8. Click ~Test Data Source~. Click OK. Click OK again to close the
+   data source administrator.
+
+Once the appropriate DSNs are available for you, you can use the
+~RODBC~ package to access your databases:
+
+#+begin_src R :session :results output :exports all
+  require(RODBC)
+#+end_src
+
+Once your system is configured for the ODBC connection, you need to
+define that connection within R, replacing the CAPS with your specific
+values:
+
+#+begin_src R :session :results output :exports all
+  # For example, if you'd followed the user DSN naming, above,
+  # the "NAME OF DSN CONNECTION" would be "SQL3"
+  connection <- odbcConnect("NAME OF DSN CONNECTION",
+                     uid="YOUR USER ID", pwd="YOUR PASSWORD")
+#+end_src
+
+*Using pop-up password entry in RStudio*
+
+Instead of hard-coding your password into code, you can add a pop-up
+prompt for a password in RStudio.
+
+In the ~odbcConnect~ function, use this:
+
+~pwd = .rs.askForPassword("Please enter your password")~
+
+We can verify the connection is working:
+
+#+begin_src R :session :results output :exports all
+  odbcGetInfo(connection)
+#+end_src
+
+Once the connection is made, data can flow. If you don't already know
+the names of the tables or you want to verify their spelling, you can
+get a list by writing the list to an R object and then view that
+object:
+
+#+begin_src R :session :results output :exports all
+  # To see all tables:
+  sqlTables(connection)
+
+  # To see all tables in a given schema, e.g. dbo:
+  sqlTables(connection, schema="dbo")
+#+end_src
+
+If there are a lot of tables or you want to make a record of their
+names, create an object and then view it within R:
+
+
+~~~
+connection_tables = sqlTables(connection)
+connection_tables
+~~~
+
+### Creating data frames from a database
+
+Once you're connected to database, you can pull in an entire table using the ~sqlFetch~ function, but if you're using a database, you probably want to query it to get just what you need. To get a whole table, use ~sqlFetch~:
+
+~~~
+# Fetch a table
+whole_table = sqlFetch(connection, "table_name")
+~~~
+
+To make a SQL query and put the results into a dataframe, set up the query in an R object and then use the ~sqlQuery~ function. The following query is identical to above as it brings in the whole table:
+
+~~~
+# Within the double quotes you can put a valid SQL query,
+# using single quotes to name the table
+query_1 = "SELECT * FROM 'table_name'"
+
+# Then use sqlQuery to pull the table into R
+query_1_dataframe = sqlQuery(connection, query_1)
+
+# While not as clear for large queries, you can combine them into one step:
+query_1_dataframe = sqlQuery(connection, "SELECT * FROM 'table_name'")
+~~~
+
+Any typical SQL query will work; for example, this query will pull in all columns but only those records specified by the where clause, and will sort it by the order by variable(s):
+
+~~~
+# Usual SQL syntax works
+query_2 = "SELECT * FROM 'table_name$'
+  WHERE variable_name = some_condition
+  ORDER BY ordering_variable_name"
+
+query_2_dataframe = sqlQuery(connection, query_2)
+~~~
+
+### Disconnecting from a database
+
+When you have the data you need, or at least by the end of the R session, close the database connection:
+
+~~~
+odbcCloseAll()
+~~~
+
+The ~RODBC~ package allows R to connect with any database that allows OBDC connections, and then interact with that database using SQL. Since database platforms, local systems, and server environments vary considerably, it can be difficult to specify how to set up the initial DSN connection for any given combination—you'll need to consult with a database administrator or search online for your particular combination of databases, drivers, and system connections.
+
+You can learn more by viewing: ~vignette("RODBC", package="RODBC")~.
+
+
+### Creating a SQLite database inside R
+
+You don't even need to understand the intricacies of database planning and management to be able to create your own database on the fly from within R. While there's no need to do so if your data fits into R's memory, it can be really useful if you need to subset and merge several large files to obtain a working dataframe that can be comfortably analyzed within R's memory limits.
+
+This recipe walks through creating a SQLite database and adding tables to it; the following recipe will walk through obtaining data from the database for analysis in R.
+
+The ~sqldf~ package provides more options for database work without dealing with a formal database—everything can be done from within R.
+
+~~~
+require(sqldf)
+~~~
+
+
+Creating a new database with sqldf is easy:
+
+~~~
+sqldf("attach 'PSES_database.sqlite' as new")
+~~~
+
+It's just a shell at the moment (which is why the command returns ~NULL~); next create a connection to that database for use in subsequent table import and manipulation:
+
+~~~
+connect = dbConnect(SQLite(), dbname="PSES_database.sqlite")
+~~~
+
+And now you can read R data frames into the database using ~dbWriteTable~:
+
+~~~
+# Write a data frame into a database table
+# options are connection name, name of the table to write, and name of the dataframe
+dbWriteTable(connect, "pses2011", pses2011)
+~~~
+
+You can also read csv files directly into the database (i.e., so it is not throttled by passing through R first). We'll use the PSES 2011 data again, this time downloading it directly:
+
+~~~
+# Download the PSES2011 file
+download.file("http://www.tbs-sct.gc.ca/pses-saff/2011/data/
+  2011_results-resultats.csv", "pses2011.csv")
+
+# Read the csv into the database as a table called pses2011_downloaded
+read.csv.sql("pses2011.csv", sql = "CREATE TABLE pses2011_downloaded
+  AS SELECT * FROM file", dbname = "PSES_database.sqlite")
+~~~
+
+Because an Excel file must be loaded into R first, and then passed to the database, you need to consider other options. If your Excel file has only a few sheets in it, saving them as csvs might be preferable. If you have many sheets to import, using ~XLConnect~ to import the sheets all at once could save a little time. They'll still need to be loaded into the database individually, however, and you should remove the dataframes when you've transferred them to the database.
+
+~~~
+# Download the Excel file
+download.file("http://www.tbs-sct.gc.ca/pses-saff/2011/data/
+  PSES2011_Documentation.xls", "PSES2011_Documentation.xls")
+
+# Load the Excel file into R
+pses2011_xls = loadWorkbook("PSES2011_Documentation.xls")
+
+# Read each worksheet into separate dataframes within a list
+pses2011_documentation = readWorksheet(pses2011_xls,
+  sheet=getSheets(pses2011_xls))
+
+# The sheet names have spaces and hyphens, which will cause
+# trouble for SQLite; run names(pses2011_documentation) to see
+# So, this changes the dataframe names inside the list
+names(pses2011_documentation) = c("Questions", "Agency", "LEVELID15", "Demcode",
+  "PosNegSpecs", "LayoutFormat")
+
+# Add a new row to account for 0 values for LEVEL1ID in
+# main pses2011 file
+pses2011_documentation$Agency = rbind(pses2011_documentation$Agency,
+  c(0,NA,"Other",NA,"OTH"))
+
+# Now each sheet can be loaded into the database as a separate table
+with(pses2011_documentation, {
+  dbWriteTable(conn=connect, name="Questions", value=Questions,
+    row.names=FALSE)
+  dbWriteTable(conn=connect, name="Agency", value=Agency,
+    row.names=FALSE)
+  dbWriteTable(conn=connect, name="LEVELID15", value=LEVELID15,
+    row.names=FALSE)
+  dbWriteTable(conn=connect, name="Demcode", value=Demcode,
+    row.names=FALSE)
+  dbWriteTable(conn=connect, name="PosNegSpecs", value=PosNegSpecs,
+    row.names=FALSE)
+  dbWriteTable(conn=connect, name="LayoutFormat", value=LayoutFormat,
+    row.names=FALSE)
+} )
+
+# Remove the Excel objects
+rm(pses2011_xls, pses2011_documentation)
+~~~
+
+To see names of the tables in the database:
+
+~~~
+sqldf("SELECT * FROM sqlite_master", dbname = "PSES_database.sqlite")$tbl_name
+~~~
+
+To see table names and the SQL statements that generated them:
+
+~~~
+sqldf("SELECT * FROM sqlite_master", dbname = "PSES_database.sqlite")
+~~~
+
+To see names of columns in a particular table:
+
+~~~
+# Note: PRAMA and TABLE_INFO are SQLite-specific statements
+sqldf("PRAGMA TABLE_INFO(Questions)", dbname = "PSES_database.sqlite")$name
+~~~
+
+A shortcut for seeing a list of tables and/or fields (which may not work depending on your system):
+
+~~~
+dbListTables(connect)
+dbListFields(connect, "Questions")
+~~~
+
+The equivalent of ~head~ to look at the start of a table would be:
+
+~~~
+sqldf("SELECT * FROM Questions LIMIT 6", dbname = "PSES_database.sqlite")
+~~~
+
+Finally, whenever you're done interacting with the database, close the connection:
+
+~~~
+dbDisconnect(connect)
+~~~
+
+SQLite was built intentionally to a be "lightweight" database, and being able to set it up and access it from entirely within R makes it perfect for occasional to moderate desktop use. As is the case with the many different flavors of SQL, there are nuances in SQLite (as we saw with the PRAGMA statement, above), but most basic uses remain the same across those different types of SQL.
+
+You can see a list of the SQL statements available with:
+
+~~~
+.SQL92Keywords
+~~~
+
+More info on the way R interfaces with RDBMSs can be found on the homepage for the [DBI package](https://github.com/rstats-db/DBI), and details on SQLite can be found at its [homepage](http://www.sqlite.org/).
+
+Those with more sophisticated desktop database needs might consider [PostgreSQL](http://www.postgresql.org/), which also plays well with R via the ~RPostgreSQL~ package.
+
+
+### Creating a dataframe from a SQLite database
+
+Once you have a database connection, you're able to access exactly what you need and pull just that into R as a dataframe, conserving memory and saving time when working on projects that will need to access a variety of tables.
+
+Load the ~sqldf~ package if it's not already loaded, and then reconnect to the database we created in the previous recipe:
+
+~~~
+require(sqldf)
+connect = dbConnect(SQLite(), dbname="PSES_database.sqlite")
+~~~
+
+Selecting subsets from a database table using ~sqldf~ is based on (of course) SQL select statements. For example, this statement brings in three of the columns from the LEVEL1ID table:
+
+~~~
+pses_acr = sqldf("SELECT
+  Level1ID
+  , Acronym_PSES_Acronyme_SAFF AS Acronym
+  , DeptNameE as Department
+  FROM Agency",
+  dbname="PSES_database.sqlite")
+~~~
+
+You can join tables within the database as well before bringing it into R. For example, this code merges the main data table (~pses2011~) with the agency name/abbreviation table to create a dataframe called ~pses2011-agency~:
+
+~~~
+pses2011_agency = sqldf("SELECT
+  maintable.*
+  , agencytable.DeptNameE as Agency
+  , agencytable.Acronym_PSES_Acronyme_SAFF as Abbr
+  FROM pses2011 maintable
+  LEFT JOIN Agency agencytable
+    ON maintable.LEVEL1ID = agencytable.Level1ID",
+  dbname="PSES_db.sqlite")
+~~~
+
+Don't forget to close the connection:  ~dbDisconnect(connect)~ or ~close(connect)~.
+
+Basically, ~sqldf("SQL QUERY", dbname="NAME OF DATABASE")~ is all you need to use SQLite within R, and it works on both databases and dataframes---if the latter, it's just ~sqldf("SQL QUERY")~. It is important to note that unlike R, SQLite is not case sensitive, so be careful naming tables and columns---~a~ and ~A~ are identical to SQLite. (SQL functions are in CAPS in the code examples in this book simply to distinguish them from table and column names, which are left in the same case that R sees them.)
+
+You can do most basic types of SQL work in this fashion; for example, if you want to count the number of rows in your new dataframe where ~ANSWER3~ ("Neutral") is more than 50% of the total responses, have it grouped by ~Question~ and ~Agency~, and order the result by highest to lowest counts, you can use:
+
+~~~
+agency_row_count = sqldf("SELECT
+  Question
+  , Agency
+  , COUNT(ANSWER3) as Answer3_Count
+  FROM pses2011_agency
+  WHERE ANSWER3 > 50
+  GROUP BY Question, Agency
+  ORDER BY Answer3_Count desc")
+~~~
+
+The possibilities are fairly limitless by containing large files inside a database and bringing in only what's needed for analysis using SQL, such as via ~sqldf~ or ~RODBC~. A basic knowledge of SQL is required, of course, but the learning curve is very small for R users and well worth taking on given its centrality in data access and manipulation. It also serves as a great bridge for those used to SQL who want to use R more extensively but are not yet accomplished in using the R functions that have SQL equivalents (e.g., R's ~merge~ vs. SQL joins). For example, the standard SQL ~CASE WHEN~ statement could be used to generate new columns that sum the number of cases in which the majority either strongly agreed or strongly disagreed:
+
+~~~
+agency_row_count = sqldf("SELECT
+  Question
+  , SUM(CASE WHEN ANSWER1 > 51 THEN 1 ELSE 0 END) AS Strong_Agreement
+  , SUM(CASE WHEN ANSWER5 > 51 THEN 1 ELSE 0 END) AS Strong_Disagreement
+  FROM pses2011_agency
+  GROUP BY Question, Agency
+  ORDER BY Question desc")
+~~~
+
+It's worth pointing out that if your data fits in memory, there usually isn't need for creating a local database; merging and manipulation can occur inside R, and recipes in the next chapter explore ways to do that.
+
+
+## Getting data from the web
+
+### Working through a proxy
+
+If you're working behind a company firewall, you may have to use a proxy to pull data into R from the web. The ~httr~ package makes it simple.
+
+~~~
+require(httr)
+~~~
+
+Enter your proxy address, the port (usually 8080), and your user name/password in place of the CAPS code:
+
+~~~
+set_config(use_proxy(url="YOUR_PROXY_URL", port="YOUR_PORT",
+  username="YOUR_USER_NAME", password="YOUR_PASSWORD"))
+~~~
+
+There is a bewildering array of methods to access websites from within R, particularly while having to pass through a proxy, and most of them are obscure to even the most established quants. Thanks to ~httr~, all of that complexity has been hidden behind a few simple functions—type ~vignette("quickstart", package="httr")~ if you want more information.
+
+
+### Scraping data from a web table
+
+Sometimes, webpages have a treasure trove of data in tables... but they don't have an option to download it as a text or Excel file. And while data scraping addins are avilable for modern web browsers like Chrome (*Scraper*) or Firefox (*Table2Clipboard* and *TableTools2*) that make it as easy as point-and-click, if the tables aren't set up for easy download or a simple cut-and-paste, you can use the ~XML~ package to grab what you need.
+
+While there are a few R packages that allow scraping, the ~XML~ package is the simplest to begin with, and may serve all your needs anyway.
+
+~~~
+require(XML)
+~~~
+
+As a simple example, we can explore the [2010 National Survey on Drug Use and Health](http://archive.samhsa.gov/data/NSDUH/2k10nsduh/tabs/Sect1peTabs1to46.htm). Like many websites, it has pages that contain multiple tables. Say we just want Table 1.1A. First, read in the raw html:
+
+~~~
+drug_use_2010 = readLines("http://archive.samhsa.gov/data/NSDUH/
+  2k10nsduh/tabs/Sect1peTabs1to46.htm")
+~~~
+
+Then read in the first table (~which=1~) part of the html:
+
+~~~
+drug_use_table1_1 = readHTMLTable(drug_use_2010, header=T, which=1,
+  stringsAsFactors=FALSE)
+~~~
+
+What if you want more than one table? Since we've read in the entire webpage, we can scrape it to extract whatever information we need. For example, let's say we want tables 1.17A and 1.17B. Using the webpage's [table of contents](http://archive.samhsa.gov/data/NSDUH/2k10nsduh/tabs/TOC.htm#TopOfPage), we find that the tables we want are 31st and 32nd:
+
+~~~
+drug_use_table1_17a = readHTMLTable(drug_use_2010, header=T, which=31,
+  stringsAsFactors=FALSE)
+drug_use_table1_17b = readHTMLTable(drug_use_2010, header=T, which=32,
+  stringsAsFactors=FALSE)
+~~~
+
+#### Scraping tables that cover multiple pages
+
+What about a case where you need a table that goes over many pages? For example, ProPublica has a website that lists [deficiencies in nursing home care in the United States](http://projects.propublica.org/nursing-homes/). At the time of this writing (mid 2016), the subset that includes Texas contains more than 22 thousand rows that cover 524 different (web)pages.
+
+Obviously, cutting and pasting that would seriously suck.
+
+Here's how you can do it in R with a few lines of code. First, set up an R object that will iteratively list every one of the 189 web URLs:
+
+~~~
+allpages = paste("http://projects.propublica.org/nursing-homes/findings/
+  search?page=", 1:524, "&search=&ss=ALL&state=TX", sep="")
+~~~
+
+...then read in each page into an R list format:
+
+~~~
+tablelist = list()
+for(i in seq_along(allpages)){
+  page = allpages[i]
+  page = readLines(page)
+  homes = readHTMLTable(page, header=T, which=1, stringsAsFactors = FALSE)
+  tablelist[[i]] = homes
+  }
+~~~
+
+...and finally turn the list into a data frame:
+
+~~~
+nursing_home_deficiencies = do.call(rbind, lapply(tablelist, data.frame,
+  stringsAsFactors=FALSE))
+~~~
+
+This result still needs some cleaning before we can move to analysis---Chapter 3 provides an example of cleaning this particular scrape in addition to the more general recipes.
+
+
+### Working with APIs
+
+Many data-oriented sites have APIs that make it easy to pull in data to R. Some are wide open, but most true APIs  require keys. And of course, each one has its own terms of service and ways to implement.
+
+A good example of a typical API is via the US Census Bureau's American Community Survey (ACS). First, go to their [*Terms of Service* page](http://www.census.gov/data/developers/about/terms-of-service.html), and if you agree with those terms, click the **Request a KEY** button at the bottom of the left side menu bar. A pop-up will ask for your organization and email address (and agreement to the *Terms*, of course), and it will return a key to that email within a few minutes.
+
+The ~acs~ R package provides the link between the API and R, and also provides a function to permanently install the key so you don't have to enter it every time you hit the API:
+
+~~~
+require(acs)
+api.key.install(key="y0uR K3y H3rE")
+~~~
+
+The ACS is *vast*. Since this is simply a recipe for example's sake, we'll assume you know the table and geographies you want data on... say, population by county in Texas. ~acs~ keeps the data frame part of the object in the ~estimate~ slot:
+
+~~~
+tx_pops_acs = acs.fetch(geography=geo.make(state="TX", county="Harris"),
+    table.number="B01003")
+tx_county_pops = data.frame(tx_pops_acs@estimate)
+~~~
+
+We'll see more use of the ~acs~ package in the *Maps* section of Chapter 7.
+
+
+## Creating fake data to test code
+
+Creating fake data is useful when you want to test how code will work before doing it "for real" on larger, more complicated datasets. We'll create a few fake dataframes in this recipe as both an example as how to do it, as well as for use in other recipes in this book.
+
+While creating and using fake data is useful for lots of cases, it is especially useful for merging/joining (which we'll explore in the next chapter). Sometimes joins may not behave like you expect that they will due to intricacies in your data, so testing it first on known (fake) data helps you determine whether any problems arose because of the code, or because of something in your data. If the fake data merge as expected but the real data don't, then you know that there's something in your data (and not the code!) that is messing with the join process. In large, enterprise-scale databases, it is typically the joins that can cause the most unexpected behavior---problems there can lead to the wrong results, impacting everything downstream of that join for the worse.
+
+Whatever the use case, testing code on fake data can sometimes save considerable time that would have been lost debugging.
+
+Using a variety of sources, we'll develop four dataframes that mimic a customer sales type of database (of course, these datasets are all small, so a database is unnecessary here).
+
+~~~
+# Table A – customer data
+set.seed(1235813)
+customer_id = seq(1:10000)
+customer_gender = sample(c("M","F", "Unknown"), 10000, replace=TRUE,
+  prob=c(.45, .45, .10))
+customer_age = round(runif(10000, 18, 88), 0)
+make_NAs = which(customer_age %in% sample(customer_age, 25))
+customer_age[make_NAs] = NA
+customer_purchases = round(rlnorm(10000)*100, 2)
+
+# Table B – city/state/zip and business density lookup table
+download.file("ftp://ftp.census.gov/econ2012/CBP_CSV/zbp12totals.zip",
+  "temp.zip", method="curl")
+zipcodes = read.table(unz("temp.zip", "zbp12totals.txt"), header=T, quote="\"",
+  sep=",", colClasses="character")
+zipcodes = zipcodes[,c(1,11:12,10)]
+# End of Table B
+
+# Table A, continued
+customer_zip = zipcodes[sample(1:nrow(zipcodes), 10000, replace=TRUE),]$zip
+customers = data.frame(customer_id, customer_gender, customer_age,
+  customer_purchases, customer_zip, stringsAsFactors=FALSE)
+
+# Table C – results of a product interest survey
+ones = seq(1, 1, length.out = 2000)
+zeros = seq(0, 0, length.out = 2000)
+strongly_agree = c(ones, zeros, zeros, zeros, zeros)
+agree = c(zeros, ones, zeros, zeros, zeros)
+neutral = c(zeros, zeros, ones, zeros, zeros)
+disagree = c(zeros, zeros, zeros, ones, zeros)
+strongly_disagree = c(zeros, zeros, zeros, zeros, ones)
+survey = data.frame(customer_id, strongly_agree, agree, neutral, disagree,
+  strongly_disagree)
+
+# Table D – lookup table to match states to regions
+state_regions = data.frame(datasets::state.abb, datasets::state.name,
+  datasets::state.region, datasets::state.division, stringsAsFactors=FALSE)
+colnames(state_regions) = c("abb", "state", "region", "division")
+~~~
+
+In Table A, we've created a customer demographic and sales dataset. The ~sample~ function creates a random vector of male and female genders, as well as unknown, proportional to the weights in the ~prob~ option. The age and purchase values were created using the random number generators based on the uniform and log-normal distributions, respectively. The age value vector was subsequently replaced with 25% NAs. Each customer's zip code was generated from a random selection of the zip codes in Table B. All vectors are then brought together into the ~customers~ data frame.
+
+Table B, we've downloaded and unzipped some 2012 County Business Patterns data from the US Census to create a "locations" lookup table. (Metadata for this dataset is online [here](https://www.census.gov/econ/cbp/download/noise_layout/ZIP_Totals_Layout10.txt); in addition to the city/state/zip fields, we've also kept the ~est~ field, which is the number of business establishments in this zip code in the first quarter of 2012.)
+
+Table C is just a systematic selection designating a survey response from each customer. This could also be done randomly, but is done this way here simply for illustraion.
+
+Finally, Table D takes advantage of R's built-in data from the ~datasets~ package to generate a lookup table of states and state regions.
+
+I> ~wakefield~ is a new R package that will generate random datasets for you. In addition to the random data frame generation, it also has a nice function to visualize the distribution of NAs in a data frame. Check out [its GitHub site](https://github.com/trinker/wakefield) for more info.
+
+
+## Writing files to disk
+
+There is usually no reason to save a dataframe for use outside R in any format other than a flat file: the only way to provide truly reproducible analytics is to ensure everything can be read by any program, language, or platform.
+
+~write.table~ using ~sep=","~ will save your dataframe as a csv, and setting ~row.names=FALSE~ will save it without the row numbers that R provides by default.
+
+~~~
+write.table(pses2011, "pses2011.csv", sep=",", row.names=FALSE)
+~~~
+
+Sometimes you have a single data frame that you want to export as separate text files based on a factor. Here's how to do that:
+
+~~~
+# Split data frame into a list by a factor
+pses2011_split = split(pses2011, pses2011$LEVEL1ID)
+
+# Save each new data frame as an individual .csv file based on its name
+lapply(1:length(pses2011_split), function(i)
+    write.csv(pses2011_split[[i]],
+    file = paste0("~/BIWR/",
+    names(pses2011_split[i]), ".csv"),
+    row.names = FALSE))
+~~~
+
+If you want to save a data frame in XML format (at the cost of a larger file size!), use the ~write.xml~ function in the ~kulife~ package.
+
+~~~
+kulife::write.xml(iris, file = "iris.xml")
+~~~
+
+If you want to save data in JSON format, use ~jsonlite~ with the ~pretty~ option set to true to have it formatted cleanly. Then ~sink~ it into a file in the working directory.
+
+~~~
+iris_json = jsonlite::toJSON(iris, pretty = TRUE)
+sink("iris_json.json")
+iris_json
+sink()
+~~~
+
+Note you can save memory by calling a function from a package using the ~::~ connector, which will run that function without having to load its home package. This can also be useful if you don't want to mask functions in already-loaded packages that have the same name.
