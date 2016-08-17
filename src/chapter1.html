@@ -1,0 +1,862 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2016-08-16 Tue 21:35 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chapter 1 of Business Intelligence with R</title>
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Sergio-Feliciano Mendoza-Barrera" />
+<meta  name="description" content="The analytics problem"
+ />
+<meta  name="keywords" content="R, data science, emacs, ESS, org-mode, analytics" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/bigblow.css"/>
+<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/bigblow/css/hideshow.css"/>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery-ui-1.10.2.min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.localscroll-min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/jquery.zclip.min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/bigblow.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/bigblow/js/hideshow.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Chapter 1 of Business Intelligence with R</h1>
+<div class="ABSTRACT">
+<p>
+Chapter 1. The Analytics Problem.
+</p>
+
+<p>
+Instructions: M-x org-babel-execute-buffer or C-c C-v b to evaluate
+all buffer.
+</p>
+
+</div>
+
+<div id="outline-container-orgheadline12" class="outline-2">
+<h2 id="orgheadline12"><span class="section-number-2">1</span> The Analytics Problem</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+The data we'll use in this chapter contains 2+ million records of
+minute-scale power consumption in a single household for about 47
+months, collected by Electricité de France and archived at the UCI
+Machine Learning Repository. The data set's page can be accessed <a href="https://archive.ics.uci.edu/ml/datasets/Individual+household+electric+power+consumption">here</a>
+for more details, but for convenience, the attributes of this dataset
+are as follows:
+</p>
+
+<ol class="org-ol">
+<li><b>date</b>: date in format dd/mm/yyyy</li>
+
+<li><b>time</b>: time in format hh:mm:ss</li>
+
+<li><b>global_active_power</b>: household global minute-averaged active
+power (in kilowatts)</li>
+
+<li><b>global_reactive_power</b>: household global minute-averaged reactive
+power (in kilowatts)</li>
+
+<li><b>voltage</b>: minute-averaged voltage (in volts)</li>
+
+<li><b>global_intensity</b>: household global minute-averaged current
+intensity (in amperes)</li>
+
+<li><b>sub_metering_1</b>: energy sub-metering No. 1 (in watt-hours of
+active energy). It corresponds to the kitchen, containing mainly a
+dishwasher, an oven, and a microwave (hot plates are not electric
+but gas powered).</li>
+
+<li><b>sub_metering_2</b>: energy sub-metering No. 2 (in watt-hours of
+active energy). It corresponds to the laundry room, containing a
+washing-machine, a tumble-drier, a refrigerator, and a light.</li>
+
+<li><b>sub_metering_3</b>: energy sub-metering No. 3 (in watt-hours of
+active energy). It corresponds to an electric water-heater and an
+air-conditioner.</li>
+</ol>
+
+<p>
+Our purpose is to describe past monthly power usage and forecast
+potential usage for six months following the last full month of data
+in the dataset.
+</p>
+</div>
+
+<div id="outline-container-orgheadline7" class="outline-3">
+<h3 id="orgheadline7"><span class="section-number-3">1.1</span> Load the packages</h3>
+<div class="outline-text-3" id="text-1-1">
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;">## </span><span style="color: #808080;">Remove all workspace data</span>
+rm(list = ls())
+
+<span style="color: #FFC66D;">Install_And_Load</span> <span style="color: #9876AA; font-style: italic;">&lt;-</span> <span style="color: #CC7832;">function</span>(Required_Packages)
+{
+    Remaining_Packages <span style="color: #9876AA; font-style: italic;">&lt;-</span> Required_Packages[!(Required_Packages <span style="color: #9876AA; font-style: italic;">%in%</span>
+                          installed.packages()[,<span style="color: #6A8759;">"Package"</span>])];
+
+    <span style="color: #CC7832;">if</span>(length(Remaining_Packages))
+    {
+        install.packages(Remaining_Packages, repos=<span style="color: #6A8759;">'http://cran.rstudio.com/'</span>);
+    }
+    <span style="color: #CC7832;">for</span>(package_name <span style="color: #CC7832;">in</span> Required_Packages)
+    {
+        <span style="color: #9876AA; font-style: italic;">library</span>(package_name,character.only=<span style="color: #CC7832;">TRUE</span>,quietly=<span style="color: #CC7832;">TRUE</span>);
+    }
+}
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Specify the list of required packages to be installed and load</span>
+Required_Packages <span style="color: #9876AA; font-style: italic;">&lt;-</span> c(<span style="color: #6A8759;">"zoo"</span>, <span style="color: #6A8759;">"dplyr"</span>, <span style="color: #6A8759;">"reshape2"</span>, <span style="color: #6A8759;">"forecast"</span>,
+                       <span style="color: #6A8759;">"ggplot2"</span>, <span style="color: #6A8759;">"htmlwidgets"</span>, <span style="color: #6A8759;">"dygraphs"</span>);
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Call the Function and load packages</span>
+Install_And_Load(Required_Packages);
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Set the working directory</span>
+setwd(<span style="color: #6A8759;">"~/src/BIwR/src"</span>)
+writeLines(<span style="color: #6A8759;">"\n\t\t :: Required packages loaded ..."</span>)
+
+<span style="color: #808080;">## </span><span style="color: #808080;">This package will allow us to interpolate between missing time series values</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(zoo)</span>
+
+<span style="color: #808080;">## </span><span style="color: #808080;">These packages provide functions for easy data wrangling</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(dplyr)</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(reshape2)</span>
+
+<span style="color: #808080;">## </span><span style="color: #808080;">This package provides automated forecasting of time series data</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(forecast)</span>
+
+<span style="color: #808080;">## </span><span style="color: #808080;">This package allows us to create publication-quality plots</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(ggplot2)</span>
+
+<span style="color: #808080;">## </span><span style="color: #808080;">This package allows creation of javascript widgets for use in webpages</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(htmlwidgets)</span>
+
+<span style="color: #808080;">## </span><span style="color: #808080;">This packages uses htmlwidgets to make time series widgets</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">require(dygraphs)</span>
+</pre>
+</div>
+
+<pre class="example">
+:: Required packages loaded ...
+</pre>
+</div>
+
+<div id="outline-container-orgheadline1" class="outline-4">
+<h4 id="orgheadline1"><span class="section-number-4">1.1.1</span> Acquire data</h4>
+<div class="outline-text-4" id="text-1-1-1">
+<p>
+Download the data from a zipped flat file (semi-colon delimted .txt
+format) on the UCI Machine Learning Repository:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R">destinationfile <span style="color: #9876AA; font-style: italic;">&lt;-</span> <span style="color: #6A8759;">"../data/household_power_consumption.zip"</span>
+downURL <span style="color: #9876AA; font-style: italic;">&lt;-</span> <span style="color: #6A8759;">"http://archive.ics.uci.edu/ml/machine-learning-databases/00235/house</span><span style="color: #ee82ee; background-color: #333333;">hold_power_consumption.zip"</span>
+
+<span style="color: #CC7832;">if</span>(!file.exists(destinationfile)){
+
+        <span style="color: #808080;">## </span><span style="color: #808080;">Download the zip file into the data folder</span>
+        download.file(downURL, destfile = destinationfile)
+
+        <span style="color: #808080;">## </span><span style="color: #808080;">Unzip the data from the zip file into the Data folder</span>
+        unzip(destinationfile, exdir = <span style="color: #6A8759;">"../data"</span>)
+
+        <span style="color: #808080;">## </span><span style="color: #808080;">Read the data into R</span>
+        <span style="color: #808080;">## </span><span style="color: #808080;">NAs are represented by blanks and ? in this data, so need to change</span>
+        power <span style="color: #9876AA; font-style: italic;">&lt;-</span> read.table(<span style="color: #6A8759;">"../data/household_power_consumption.txt"</span>,
+                            sep = <span style="color: #6A8759;">";"</span>, header = T, na.strings = c(<span style="color: #6A8759;">"?"</span>,<span style="color: #6A8759;">""</span>),
+                            stringsAsFactors = <span style="color: #CC7832;">FALSE</span>)
+
+} <span style="color: #CC7832;">else</span> {
+        <span style="color: #808080;">## </span><span style="color: #808080;">Read the data into R</span>
+        <span style="color: #808080;">## </span><span style="color: #808080;">NAs are represented by blanks and ? in this data, so need to change</span>
+        power <span style="color: #9876AA; font-style: italic;">&lt;-</span> read.table(<span style="color: #6A8759;">"../data/household_power_consumption.txt"</span>,
+                            sep = <span style="color: #6A8759;">";"</span>, header = T, na.strings = c(<span style="color: #6A8759;">"?"</span>,<span style="color: #6A8759;">""</span>),
+                            stringsAsFactors = <span style="color: #CC7832;">FALSE</span>)
+
+}
+
+writeLines(paste(<span style="color: #6A8759;">"\n\t\t :: Dataframe loaded from file with"</span>,
+                 nrow(power), <span style="color: #6A8759;">"row ::"</span>))
+</pre>
+</div>
+
+<pre class="example">
+:: Dataframe loaded from file with 2075259 row ::
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgheadline2" class="outline-4">
+<h4 id="orgheadline2"><span class="section-number-4">1.1.2</span> Wrangling data</h4>
+<div class="outline-text-4" id="text-1-1-2">
+<p>
+We'll look at the structure of the data to see what's been read in:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">str gives you the structure of the dataset</span>
+str(power)
+</pre>
+</div>
+
+<pre class="example">
+'data.frame':	2075259 obs. of  9 variables:
+ $ Date                 : chr  "16/12/2006" "16/12/2006" "16/12/2006" "16/12/2006" ...
+ $ Time                 : chr  "17:24:00" "17:25:00" "17:26:00" "17:27:00" ...
+ $ Global_active_power  : num  4.22 5.36 5.37 5.39 3.67 ...
+ $ Global_reactive_power: num  0.418 0.436 0.498 0.502 0.528 0.522 0.52 0.52 0.51 0.51 ...
+ $ Voltage              : num  235 234 233 234 236 ...
+ $ Global_intensity     : num  18.4 23 23 23 15.8 15 15.8 15.8 15.8 15.8 ...
+ $ Sub_metering_1       : num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Sub_metering_2       : num  1 1 2 1 1 2 1 1 1 2 ...
+ $ Sub_metering_3       : num  17 16 17 17 17 17 17 17 17 16 ...
+</pre>
+
+<p>
+The <code>Date</code> and <code>Time</code> variables were read in as characters, so we'll
+convert them to date and time classes, respectively, as well as create
+a new <code>DateTime</code> column:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Convert date to an ISO date</span>
+power$Date <span style="color: #9876AA; font-style: italic;">&lt;-</span> as.Date(power$Date, format=<span style="color: #6A8759;">"%d/%m/%Y"</span>)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Create a DateTime object</span>
+power$DateTime <span style="color: #9876AA; font-style: italic;">&lt;-</span> as.POSIXct(paste(power$Date, power$Time))
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Obtain the Month and Year for each data point</span>
+power$Month <span style="color: #9876AA; font-style: italic;">&lt;-</span> format(power$Date,<span style="color: #6A8759;">"%Y-%m"</span>)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Add the first to each Y-m combo and convert back to ISO Date</span>
+power$Month <span style="color: #9876AA; font-style: italic;">&lt;-</span> as.Date(paste0(power$Month, <span style="color: #6A8759;">"-01"</span>))
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Verify the changes</span>
+str(power)
+</pre>
+</div>
+
+<pre class="example">
+'data.frame':	2075259 obs. of  11 variables:
+ $ Date                 : Date, format: "2006-12-16" "2006-12-16" ...
+ $ Time                 : chr  "17:24:00" "17:25:00" "17:26:00" "17:27:00" ...
+ $ Global_active_power  : num  4.22 5.36 5.37 5.39 3.67 ...
+ $ Global_reactive_power: num  0.418 0.436 0.498 0.502 0.528 0.522 0.52 0.52 0.51 0.51 ...
+ $ Voltage              : num  235 234 233 234 236 ...
+ $ Global_intensity     : num  18.4 23 23 23 15.8 15 15.8 15.8 15.8 15.8 ...
+ $ Sub_metering_1       : num  0 0 0 0 0 0 0 0 0 0 ...
+ $ Sub_metering_2       : num  1 1 2 1 1 2 1 1 1 2 ...
+ $ Sub_metering_3       : num  17 16 17 17 17 17 17 17 17 16 ...
+ $ DateTime             : POSIXct, format: "2006-12-16" "2006-12-16" ...
+ $ Month                : Date, format: "2006-12-01" "2006-12-01" ...
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgheadline3" class="outline-4">
+<h4 id="orgheadline3"><span class="section-number-4">1.1.3</span> Summary of variables</h4>
+<div class="outline-text-4" id="text-1-1-3">
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Get an overview of the variables</span>
+summary(power)
+</pre>
+</div>
+
+<pre class="example">
+     Date                Time           Global_active_power
+Min.   :2006-12-16   Length:2075259     Min.   : 0.076
+1st Qu.:2007-12-12   Class :character   1st Qu.: 0.308
+Median :2008-12-06   Mode  :character   Median : 0.602
+Mean   :2008-12-05                      Mean   : 1.092
+3rd Qu.:2009-12-01                      3rd Qu.: 1.528
+Max.   :2010-11-26                      Max.   :11.122
+                                        NA's   :25979
+Global_reactive_power    Voltage      Global_intensity Sub_metering_1
+Min.   :0.000         Min.   :223.2   Min.   : 0.200   Min.   : 0.000
+1st Qu.:0.048         1st Qu.:239.0   1st Qu.: 1.400   1st Qu.: 0.000
+Median :0.100         Median :241.0   Median : 2.600   Median : 0.000
+Mean   :0.124         Mean   :240.8   Mean   : 4.628   Mean   : 1.122
+3rd Qu.:0.194         3rd Qu.:242.9   3rd Qu.: 6.400   3rd Qu.: 0.000
+Max.   :1.390         Max.   :254.2   Max.   :48.400   Max.   :88.000
+NA's   :25979         NA's   :25979   NA's   :25979    NA's   :25979
+Sub_metering_2   Sub_metering_3      DateTime
+Min.   : 0.000   Min.   : 0.000   Min.   :2006-12-16 00:00:00
+1st Qu.: 0.000   1st Qu.: 0.000   1st Qu.:2007-12-12 00:00:00
+Median : 0.000   Median : 1.000   Median :2008-12-06 00:00:00
+Mean   : 1.299   Mean   : 6.458   Mean   :2008-12-05 18:39:03
+3rd Qu.: 1.000   3rd Qu.:17.000   3rd Qu.:2009-12-01 00:00:00
+Max.   :80.000   Max.   :31.000   Max.   :2010-11-26 00:00:00
+NA's   :25979    NA's   :25979
+    Month
+Min.   :2006-12-01
+1st Qu.:2007-12-01
+Median :2008-12-01
+Mean   :2008-11-21
+3rd Qu.:2009-12-01
+Max.   :2010-11-01
+</pre>
+
+<p>
+We can see from the summary that there are about 26k missing values
+(<code>NAs</code>) in our primary variable, <code>Global_active_power</code> — about 1.25% of
+the ~2 million records. We can quickly get a table and graph of
+missing data over time by setting a counting marker for missing values
+with <code>ifelse</code>, then using the <code>dplyr</code> package to group and summarize
+the data, and finally pull a ready-made R function from the web to
+create a calendar graph that shows the daily distribution of the
+missing values.
+</p>
+
+<p>
+In first place we will download the calendar heat map from
+revolutionanalytics.com:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R">reqRUrl <span style="color: #9876AA; font-style: italic;">&lt;-</span> <span style="color: #6A8759;">"http://blog.revolutionanalytics.com/downloads/calendarHeat.R"</span>
+reqRFile <span style="color: #9876AA; font-style: italic;">&lt;-</span> <span style="color: #6A8759;">"./calendarHeat.R"</span>
+
+<span style="color: #CC7832;">if</span>(!file.exists(reqRFile)){
+
+        <span style="color: #808080;">## </span><span style="color: #808080;">Download the zip file into the data folder</span>
+        download.file(reqRUrl, destfile = reqRFile)
+        <span style="color: #9876AA; font-style: italic;">source</span>(reqRFile)
+
+} <span style="color: #CC7832;">else</span> {
+        <span style="color: #9876AA; font-style: italic;">source</span>(reqRFile)
+}
+
+writeLines(<span style="color: #6A8759;">"\n\t\t :: Required library loaded ..."</span>)
+</pre>
+</div>
+
+<pre class="example">
+:: Required library loaded ...
+</pre>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Use ifelse to count each minute that is NA</span>
+power$Missing <span style="color: #9876AA; font-style: italic;">&lt;-</span> ifelse(is.na(power$Global_active_power), 1, 0)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Use dplyr's group_by function to group the data by Date</span>
+power_group_day <span style="color: #9876AA; font-style: italic;">&lt;-</span> group_by(power, Date)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Use dplyr's summarize function to summarize by our NA indicator</span>
+<span style="color: #808080;"># </span><span style="color: #808080;">(where 1 &lt;- 1 minute with NA)</span>
+power_day_missing <span style="color: #9876AA; font-style: italic;">&lt;-</span> summarize(power_group_day, Count_Missing = sum(Missing))
+</pre>
+</div>
+
+<p>
+Now we can generate the graph:
+</p>
+
+
+<div id="orgparagraph1" class="figure">
+<p><img src="../graphs/CalendarHeatMapOfMissingData.png" alt="CalendarHeatMapOfMissingData.png" />
+</p>
+<p><span class="figure-number">Figure 1:</span> Calendar Heat Map of Missing Data</p>
+</div>
+
+<p>
+You can view the actual values of missing data on each day by
+exploring the <code>power_day_missing</code> data frame.
+</p>
+
+<p>
+The "recent" 4-5 day spans of missing data may be a little concerning
+since we want to perform automated forecasting. However, since we're
+aggregating to months and forecasting into months with very few
+missing values, we should be ok. But to make automatic forecasting
+work, we need to fill in those missing values. If we convert each
+missing value to 0, we'll definitely underestimate usage for those
+times.
+</p>
+
+<p>
+A reasonable first pass is to carry the last value forward, which we
+can do with the <code>na.locf</code> function in the <code>zoo</code> package. While other
+approaches are possible (and perhaps better, e.g., using some sort of
+mean or median value instead of the last value, or even a seasonal
+Kalman filter), we'll proceed with this option to keep the example
+simple.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Use zoo to perform interpolation for missing time series values</span>
+power$Global_active_power_locf <span style="color: #9876AA; font-style: italic;">&lt;-</span> na.locf(power$Global_active_power)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Compare the original and interpolated distributions</span>
+<span style="color: #808080;"># </span><span style="color: #808080;">Reshape the two variables into long form for ggplot</span>
+power_long <span style="color: #9876AA; font-style: italic;">&lt;-</span> melt(power, id.vars= <span style="color: #6A8759;">"DateTime"</span>, measure.vars =
+                         c(<span style="color: #6A8759;">"Global_active_power"</span>, <span style="color: #6A8759;">"Global_active_power_locf"</span>))
+</pre>
+</div>
+
+<p>
+Now we can generate the new graph
+</p>
+
+
+<div id="orgparagraph2" class="figure">
+<p><img src="../graphs/missingTimeSeriesValues.png" alt="missingTimeSeriesValues.png" />
+</p>
+<p><span class="figure-number">Figure 2:</span> Power fixed missing time series values histogram</p>
+</div>
+
+<p>
+The overall shape hasn't changed, though we can see a small spike at
+about 1 kW in the last-observation-carried-forward data. This should
+be fine for our purposes, as the overall pattern is essentially the
+same.
+</p>
+
+<p>
+Now that we have a complete time series, we can determine total
+monthly use (kWh). While we're at it, we can calculate maximum demand
+for a given month (kW) over the period of record as an example of how
+to calculate multiple summaries at once. kWh measures use, i.e., how
+much energy is used, while kW measures demand. We're interested in
+usage, because that's how power companies charge us.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Use dplyr to group by month</span>
+power_group <span style="color: #9876AA; font-style: italic;">&lt;-</span> group_by(power, Month)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Use dplyr to get monthly max demand and total use results</span>
+power_monthly <span style="color: #9876AA; font-style: italic;">&lt;-</span> summarize(power_group,
+  Max_Demand_kW = max(Global_active_power_locf),
+  Total_Use_kWh = sum(Global_active_power_locf)/60)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Remove partial months from data frame</span>
+power_monthly <span style="color: #9876AA; font-style: italic;">&lt;-</span> power_monthly[2:47,]
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Convert Month to Date</span>
+power_monthly$Month <span style="color: #9876AA; font-style: italic;">&lt;-</span> as.Date(paste0(power_monthly$Month, <span style="color: #6A8759;">"-01"</span>))
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Look at structure of the result</span>
+str(power_monthly)
+</pre>
+</div>
+
+<pre class="example">
+Classes ‘tbl_df’, ‘tbl’ and 'data.frame':       46 obs. of  3 variables:
+ $ Month        : Date, format: "2007-01-01" "2007-02-01" ...
+ $ Max_Demand_kW: num  9.27 9.41 10.67 8.16 7.67 ...
+ $ Total_Use_kWh: num  1150 942 981 617 733 ...
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgheadline5" class="outline-4">
+<h4 id="orgheadline5"><span class="section-number-4">1.1.4</span> Analytics</h4>
+<div class="outline-text-4" id="text-1-1-4">
+</div><div id="outline-container-orgheadline4" class="outline-5">
+<h5 id="orgheadline4"><span class="section-number-5">1.1.4.1</span> Explore the data</h5>
+<div class="outline-text-5" id="text-1-1-4-1">
+<p>
+Plotting your data is the single most important part of analytics, so
+this book spends a lot of space on graphical representation. Here, as
+we're focused on power use over time, we'll plot the monthy summary
+we've calculated above.
+</p>
+
+
+<div id="orgparagraph3" class="figure">
+<p><img src="../graphs/totalUseByMonth.png" alt="totalUseByMonth.png" />
+</p>
+<p><span class="figure-number">Figure 3:</span> Total use of power by month</p>
+</div>
+
+<p>
+We can see clear patterns in the data—higher in the winter and lower
+in the summer.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline6" class="outline-4">
+<h4 id="orgheadline6"><span class="section-number-4">1.1.5</span> Run a forecasting model</h4>
+<div class="outline-text-4" id="text-1-1-5">
+<p>
+Now we want to forecast total use for the next six months. We'll
+create the model with the automated <code>forecast</code> function from the
+<code>forecast</code> package, then plot the results and view the model itself.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Create a time series object of monthly total use</span>
+total_use_ts <span style="color: #9876AA; font-style: italic;">&lt;-</span> ts(power_monthly$Total_Use_kWh, start=c(2007,1), frequency=12)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">Automatically obtain the forecast for the next 6 months</span>
+<span style="color: #808080;"># </span><span style="color: #808080;">using the forecast package's forecast function</span>
+<span style="color: #808080;"># </span><span style="color: #808080;">See ?forecast for more details</span>
+total_use_fc <span style="color: #9876AA; font-style: italic;">&lt;-</span> forecast(total_use_ts, h=6)
+
+<span style="color: #808080;"># </span><span style="color: #808080;">View the forecast model results</span>
+summary(total_use_fc)
+</pre>
+</div>
+
+<pre class="example">
+Forecast method: ETS(A,N,A)
+
+Model Information:
+ETS(A,N,A)
+
+Call:
+ ets(y = object, lambda = lambda, allow.multiplicative.trend = allow.multiplicative.trend)
+
+  Smoothing parameters:
+    alpha = 1e-04
+    gamma = 1e-04
+
+  Initial states:
+    l = 793.5501
+    s=249.5197 164.8305 56.4112 -89.2231 -362.104 -267.4817
+           -146.2958 -43.7192 -8.6845 99.5397 76.7055 270.5017
+
+  sigma:  69.2979
+
+     AIC     AICc      BIC
+594.0516 607.6000 619.6526
+
+Error measures:
+                    ME     RMSE      MAE       MPE     MAPE      MASE
+Training set 0.8285485 69.29789 51.15217 -2.020886 8.651333 0.6081522
+                    ACF1
+Training set -0.08491877
+
+Forecasts:
+         Point Forecast    Lo 80     Hi 80    Lo 95     Hi 95
+Nov 2010       958.3818 869.5729 1047.1906 822.5604 1094.2031
+Dec 2010      1043.0782 954.2694 1131.8870 907.2569 1178.8996
+Jan 2011      1064.0662 975.2574 1152.8751 928.2449 1199.8876
+Feb 2011       870.2640 781.4551  959.0728 734.4426 1006.0853
+Mar 2011       893.1002 804.2914  981.9090 757.2788 1028.9216
+Apr 2011       784.8535 696.0447  873.6624 649.0322  920.6749
+</pre>
+
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;"># </span><span style="color: #808080;">Export a copy of the model results into a text file in the Results folder</span>
+sink(<span style="color: #6A8759;">"../reports/Forecast_Model.txt"</span>)
+summary(total_use_fc)
+sink()
+</pre>
+</div>
+
+
+<div id="orgparagraph4" class="figure">
+<p><img src="../graphs/forecastPlot.png" alt="forecastPlot.png" />
+</p>
+<p><span class="figure-number">Figure 4:</span> Forecast plot</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline9" class="outline-3">
+<h3 id="orgheadline9"><span class="section-number-3">1.2</span> Reporting</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+With the forecast summary and plot we have the essential pieces for
+addressing the problem. Now we need to create a report for
+decision-making. In this case, we'll again keep it simple and just
+produce an interactive browser app of the monthly trends and forecast
+results.
+</p>
+</div>
+
+<div id="outline-container-orgheadline8" class="outline-4">
+<h4 id="orgheadline8"><span class="section-number-4">1.2.1</span> Create an interactive HTML plot</h4>
+<div class="outline-text-4" id="text-1-2-1">
+<div class="org-src-container">
+
+<pre class="src src-R"><span style="color: #808080;">## </span><span style="color: #808080;">Create a data frame with the original data</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">and placeholders for the forecast details</span>
+use_df <span style="color: #9876AA; font-style: italic;">&lt;-</span> data.frame(Total_Use = power_monthly$Total_Use_kWh,
+                     Forecast = <span style="color: #CC7832;">NA</span>, Upper_80 = <span style="color: #CC7832;">NA</span>,
+                     Lower_80 = <span style="color: #CC7832;">NA</span>, Upper_95 = <span style="color: #CC7832;">NA</span>, Lower_95 = <span style="color: #CC7832;">NA</span>)
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Create a data frame for the forecast details</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">with a placeholder column for the original data</span>
+use_fc <span style="color: #9876AA; font-style: italic;">&lt;-</span> data.frame(Total_Use = <span style="color: #CC7832;">NA</span>, Forecast = total_use_fc$mean, Upper_80 =
+          total_use_fc$upper[,1], Lower_80 = total_use_fc$lower[,1],
+          Upper_95 = total_use_fc$upper[,2], Lower_95 = total_use_fc$lower[,2])
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Union the two data frames into one using rbind</span>
+use_ts_fc <span style="color: #9876AA; font-style: italic;">&lt;-</span> rbind(use_df, use_fc)
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Create a time series of the data and forecast results</span>
+total_use_forecast <span style="color: #9876AA; font-style: italic;">&lt;-</span> ts(use_ts_fc, start=c(2007, 1), freq=12)
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Create the widget</span>
+energy_use_prediction_widget <span style="color: #9876AA; font-style: italic;">&lt;-</span> dygraph(total_use_forecast,
+  main = <span style="color: #6A8759;">"Predicted Monthly Electricty Use (kWh)"</span>,
+  ylab = <span style="color: #6A8759;">"Total kWh"</span>, width=900, height=500) <span style="color: #9876AA; font-style: italic;">%&gt;%</span>
+  dySeries(c(<span style="color: #6A8759;">"Total_Use"</span>), label = <span style="color: #6A8759;">"Actual kWh Usage"</span>) <span style="color: #9876AA; font-style: italic;">%&gt;%</span>
+  dyEvent(x = <span style="color: #6A8759;">"2008-08-01"</span>, <span style="color: #6A8759;">"Went on vacation"</span>, labelLoc = <span style="color: #6A8759;">"top"</span>) <span style="color: #9876AA; font-style: italic;">%&gt;%</span>
+  dyRangeSelector(dateWindow = c(<span style="color: #6A8759;">"2008-09-15"</span>, <span style="color: #6A8759;">"2011-06-01"</span>)) <span style="color: #9876AA; font-style: italic;">%&gt;%</span>
+  dyLegend(width = 800)
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Display the widget in the Viewer window</span>
+<span style="color: #808080;">## </span><span style="color: #808080;">Hit the Zoom button for a pop-out</span>
+energy_use_prediction_widget
+
+<span style="color: #808080;">## </span><span style="color: #808080;">Save the widget as a stand-alone html file to Results folder</span>
+saveWidget(energy_use_prediction_widget,
+           <span style="color: #6A8759;">"../reports/energy_use_prediction_widget.html"</span>)
+</pre>
+</div>
+
+<p>
+In the figure below we can see the interactive forecasting model, if
+you want to interact with it you can open <a href="file:///Users/jaalkab/src/BIwR/reports/energy_use_prediction_widget.html">here</a>.
+</p>
+
+
+<div class="figure">
+<p><img src="../graphs/InteractiveForecastingHTML.png" alt="InteractiveForecastingHTML.png" />
+</p>
+</div>
+
+<p>
+Opening the <code>energy_use_prediction_widget.html</code> from the <code>reports</code>
+folder shows us the result. This stand-alone file can be sent to the
+decision-maker(s) who can explore the exact trend and forecast values
+with a mouse hover, while still seeing the overall pattern.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline10" class="outline-3">
+<h3 id="orgheadline10"><span class="section-number-3">1.3</span> Documenting the project</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+I often have a script window (<code>.R</code>) and an R Markdown (.~Rmd~) window
+open at the same time when working on projects. Once I have the code
+the way I want it, I transfer that code to the <code>.Rmd</code> file if I intend
+to include it in any data/reporting products. When I have steps or
+results and want to jot down my rationale for the methods I'm using,
+interpretations and ideas for future use, and so on, I do that in an
+<code>.Rmd</code> file as well. At the end, I aim for an <code>.Rmd</code> file that will
+allow another user to reproduce the entire analysis and have an
+understanding of why I chose certain methods or came to the
+conclusions I report. For longer analyses, this may require a "make"
+file type of setup (see <b>Appendix 1</b>).
+</p>
+
+<p>
+Even better is when it's a small project — I can make the code,
+documentation, and report all one file. Since decision makers want the
+answer first, I include all of the code except for results inside a
+single code chunk near the top. The results I place in separate code
+chunks, placed where appropriate. For example, had the forecasting
+project above required a report, I'd structure it all inside an <code>.Rmd</code>
+like I've shown in <b>Appendix 2</b>.
+</p>
+
+<p>
+To run that file manually, just load it into RStudio and click the
+<b>Knit HTML</b> button in the <b>Source</b> window. A preview window will pop
+up. In some systems, the HTML file is concurrently saved to the
+working directory, while in others you may need to <b>Open in browser</b>
+and then <b>Save as</b> from there.
+</p>
+
+<p>
+To run an <code>.Rmd</code> file programatically, the <code>rmarkdown</code> package allows
+you to run it from the console, a command line, or a "make" file (see
+<b>Appendix 1</b>) via the <code>render</code> function:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-R">writeLines(<span style="color: #6A8759;">"\n :: This command is useful in RStudio, no sens in org-mode ::"</span>)
+<span style="color: #808080;">## </span><span style="color: #808080;">render("Code/Hauteville_House_Power_Forecast_20101127.Rmd", "html_document")</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgheadline11" class="outline-3">
+<h3 id="orgheadline11"><span class="section-number-3">1.4</span> Summary</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+The entire analytics workflow for this project—from directory set-up
+through creating a forecast model and developing the final report—took
+only about 50 lines of code, excluding comments and spaces. We've seen
+in this chapter how much can be accomplished in just a few lines of R
+code; there are very few languages in which you really can do this
+much so succinctly.
+</p>
+
+<p>
+The rest of this book provides code snippets, examples, and full
+recipes for using R throughout the main portions of the analytics
+workflow: data acquisition through exploration and reporting.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: 16/08/2016</p>
+<p class="author">Author: Sergio-Feliciano Mendoza-Barrera</p>
+<p class="date">Created: 2016-08-16 Tue 21:35</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
